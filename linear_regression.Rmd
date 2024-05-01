@@ -7,9 +7,13 @@ output: html_notebook
 library(readr)
 ```
 
+```{r}
+setwd('C:/Users/I6240624/Documents/BISS/SSP/Code')
+```
+
 
 ```{r}
-scores <- read_csv("BISS/SSP/Code/scores.csv")
+scores <- read_csv("scores.csv")
 scores
 ```
 
