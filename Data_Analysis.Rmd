@@ -1,0 +1,80 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(corrplot)
+df <- read_csv("~/BISS/SSP/Code/Data/normalized_variables.csv")
+```
+```{r}
+df
+```
+
+```{r}
+df <- subset(df, select = -c(`prop_0-14`, `prop_15-24`,`prop_25-44`,`prop_45-64`,`prop_65+` ))
+df1<-df[,c(2:12)]
+df1 <- sapply(df1, as.numeric)
+# Create a correlation matrix
+cor_matrix <- cor(df1)
+
+# Assuming cor_matrix is your correlation matrix
+significant_cor <- cor_matrix[(cor_matrix >= 0.75 | cor_matrix <= -0.75) & cor_matrix != 1]
+
+# Get the indices of significant correlations
+indices <- which((cor_matrix >= 0.75 | cor_matrix <= -0.75) & cor_matrix != 1, arr.ind = TRUE)
+
+# Get the row and column names
+row_names <- paste(rownames(cor_matrix)[indices[,1]], colnames(cor_matrix)[indices[,2]], sep = " , ")
+
+
+
+# Create a logical vector to filter out only the row-column combinations
+row_col_comb <- indices[,1] < indices[,2]
+
+# Combine coefficients with corresponding row and column names (only selecting row-column combinations)
+significant_correlation <- data.frame(Row = row_names[row_col_comb], Coefficient = significant_cor)
+
+# Define a function to sort and concatenate the elements of a string
+sort_and_concat <- function(x) {
+  paste(sort(unlist(strsplit(x, " , "))), collapse = " , ")
+}
+
+# Add a new column with sorted and concatenated combinations
+data <- significant_correlation %>%
+  mutate(sorted_combination = sapply(Row, sort_and_concat))
+
+# Remove duplicate rows based on the sorted combinations
+unique_data <- data %>% distinct(sorted_combination, .keep_all = TRUE)
+
+# Remove the helper column
+unique_data <- unique_data[, !(names(unique_data) %in% c("sorted_combination"))]
+
+print(unique_data)
+corrplot(cor_matrix, method = "color", type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+```{r}
+# Convert df1 to a data frame
+df1 <- data.frame(df1)
+
+# Assuming lm() is your linear regression model
+# Use your formula in lm()
+model <- lm(livability_score ~ ., data = df1)
+summary(model)
+# Calculate Variance Inflation Factor (VIF)
+vif_values <- car::vif(model)
+vif_values
+```
+```{r}
+# Residuals from the model
+residuals <- resid(model)
+
+# Q-Q plot of residuals
+qqnorm(residuals)
+qqline(residuals)
+```
+
