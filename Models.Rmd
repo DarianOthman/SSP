@@ -1,0 +1,157 @@
+---
+title: "Models"
+author: "Group 4"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Load library and data
+```{r message=FALSE, warning=FALSE}
+setwd("/Users/atnguyen/Downloads/4.SSP")
+library(readr)
+library(caret)
+df <- read.csv("final_combined_data.csv")
+```
+
+# Split the dataset into training and testing
+
+```{r}
+set.seed(42)
+# Split the data 80 training - 20 testing
+train_ind <- createDataPartition(df$livability_score, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+df_train <- df[train_ind, ]
+df_test  <- df[-train_ind, ]
+```
+
+# Model regressing liveability on distance without considering feature of neighborhood
+This model regress the liveability score on the distance of commercial spaces and does not consider characteristics such as age, income.
+
+```{r}
+# Model with distance only
+lm_distances_no_feature <- lm(livability_score ~ . - Standard_Deviation_Age -Weighted_Average_Age -age_cluster -social_cluster -demographic_cluster -id - postal_code -prop_0.14 -prop_15.24 -prop_25.44 -prop_45.64 -prop_65. -prop_university  -worker - prop_women - pop_density - Aid - Income - single_family_housing, data = df_train)
+summary(lm_distances_no_feature)
+
+# Make prediction for livability_score on testing data
+lm_distances_no_feature_pred <- predict(lm_distances_no_feature, newdata = df_test)
+
+# RMSE
+rmse_dis_no_fea <- sqrt(mean((lm_distances_no_feature_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_dis_no_fea))
+
+
+```
+
+
+# Models considering features of neighborhood
+This model regress liveability score on distance of commercial space and the feature of neighborhood. Therefore, it allows to control the characteristics of the neighborhood such as age, income. Notice that the `age` variable is recorded into 2 methods. The first method uses the average and SD value for age of citizens living in the neighborhood. The second method records age of different groups and transfer to proportion. There is 5 bins of age values `prop_0.14`, `prop_15.24`, `prop_25.44`, `prop_45.64`, and `prop_65.`.
+
+In order to choose the best performance model, we run the model in both method recoding age.
+
+```{r , warning=FALSE}
+# Linear model with proportion of age
+lm_all_age_pro <- lm(livability_score ~ . -id - postal_code - Standard_Deviation_Age -Weighted_Average_Age - age_cluster -social_cluster -demographic_cluster, data = df_train)
+summary(lm_all_age_pro)
+
+# Make prediction for livability_score on testing data
+lm_all_age_pro_pred <- predict(lm_all_age_pro, newdata = df_test)
+rmse_all_age_pro <- sqrt(mean((lm_all_age_pro_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_all_age_pro))
+
+# Linear model with average and SD of Age
+lm_all_avg_sd_age <- lm(livability_score ~ . -id - postal_code - `prop_0.14` -`prop_15.24` - `prop_25.44` - `prop_45.64` - `prop_65.`- age_cluster -social_cluster -demographic_cluster, data = df_train)
+summary(lm_all_avg_sd_age)
+
+# Make prediction for livability_score on testing data
+lm_all_avg_sd_age_pred <- predict(lm_all_avg_sd_age, newdata = df_test)
+rmse_all_avg_sd_age <- sqrt(mean((lm_all_avg_sd_age_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_all_avg_sd_age))
+```
+
+# Model regress liveability on different measurement of commercial space distance
+
+## Model regress liveability on `distance`
+
+```{r}
+# Linear model with `distance`
+lm_distance <-  lm(livability_score ~ `prop_0.14` +`prop_15.24` + `prop_25.44` + `prop_45.64` + `prop_65.` + prop_university + worker + prop_women + pop_density + Aid + Income + single_family_housing + Distance.GP + Distance.Hospital + Distance.Supermarket+ Distance.Department.Store + Distance.Restaurant + Distance.Day.Care + Distance.School, data = df_train)
+summary(lm_distance)
+
+# Make prediction for livability_score on testing data
+lm_distance_pred <- predict(lm_distance, newdata = df_test)
+
+# RMSE
+rmse_distance <- sqrt(mean((lm_distance_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_distance))
+```
+## Model regress liveability on `Within.5.km.CommercialSpace`
+```{r}
+# Linear model with `Whithin 5 km`
+lm_within_5 <- lm(livability_score ~ `prop_0.14` +`prop_15.24` + `prop_25.44` + `prop_45.64` + `prop_65.` + prop_university + worker + prop_women + pop_density + Aid + Income + single_family_housing + Within.5.km.GP + Within.5.km.Hospital + Within.5.km.Supermarket + Within.5.km.Department.Store + Within.5.km.Restaurant + Within.5.km.Day.Care + Within.5.km.School, data = df_train)
+summary(lm_within_5)
+
+# Make prediction for livability_score on testing data
+lm_within_5_pred <- predict(lm_within_5, newdata = df_test)
+
+# RMSE
+rmse_within5 <- sqrt(mean((lm_within_5_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_within5))
+```
+
+# Model regress liveability on clusters
+It is hypothesized that neighborhoods can be categorized into distinct groups based on specific characteristic. Therefore, based on the defined clusters (`demographic_cluster`, `social_cluster`, and `age_cluster`), the model regresses liveability on distance and clusters is created. Two models uses `distance` and `cluster`; and `distance`, `Within.X.Km.CommercialSpace` and `cluster` are as follows:
+
+```{r}
+# Model - `distance` and `cluster` 
+lm_cluster_distance <- lm(livability_score ~ demographic_cluster + social_cluster + age_cluster + Distance.GP + Distance.Hospital + Distance.Supermarket+ Distance.Department.Store + Distance.Restaurant + Distance.Day.Care + Distance.School, data = df_train)
+summary(lm_cluster_distance)
+
+# Make prediction for livability_score on testing data
+lm_cluster_distance_pred <- predict(lm_cluster_distance, newdata = df_test)
+
+# RMSE
+rmse_cluster_distances <- sqrt(mean((lm_cluster_distance_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_cluster_distances))
+
+# Model - `distance`, `Within.X.Km.CommercialSpace` and `cluster`
+lm_cluster_distances_within <- lm(livability_score ~ . -id - postal_code - Weighted_Average_Age -Standard_Deviation_Age -prop_0.14 -prop_15.24 -prop_25.44 -prop_45.64 -prop_65. -prop_university  -worker - prop_women - pop_density - Aid - Income - single_family_housing, data = df_train)
+summary(lm_cluster_distances_within)
+
+# Make prediction for livability_score on testing data
+lm_cluster_distances_within_pred <- predict(lm_cluster_distances_within, newdata = df_test)
+
+# RMSE
+rmse_cluster_dis_within <- sqrt(mean((lm_cluster_distances_within_pred - df_test$livability_score)^2))
+print(paste("RMSE:", rmse_cluster_dis_within))
+
+```
+## Comparing models
+
+To find the best performance models, we compare 7 models in term of adjusted R squares and residual mean square error (RMSE)
+
+```{r warning=FALSE}
+# Extract adjusted R-squared values from each model
+adj_r_squared_lm_dis_no_fea <- summary(lm_distances_no_feature)$adj.r.squared
+adj_r_squared_lm_all_age_pro <- summary(lm_all_age_pro)$adj.r.squared
+adj_r_squared_lm_all_avg_sd_age <- summary(lm_all_avg_sd_age)$adj.r.squared
+adj_r_squared_lm_distance <- summary(lm_distance)$adj.r.squared
+adj_r_squared_lm_within_5 <- summary(lm_within_5)$adj.r.squared
+adj_r_squared_lm_cluster_dis <- summary(lm_cluster_distance)$adj.r.squared
+adj_r_squared_lm_cluster_dis_within <- summary(lm_cluster_distances_within)$adj.r.squared
+
+
+# Create a dataframe to store the results
+model_comparison <- data.frame(
+ Model = c("Distance without features","Features-distances-age propotion", "Features-distances-AgeMean-AgeSD", "Featuess-Distance", "Features-Within.5.km.CommercialSpace", "Cluster-distances", "Cluster-distances-Within.X.Km.CommercialSpace"),
+  Adjusted_R_squared = c(adj_r_squared_lm_dis_no_fea, adj_r_squared_lm_all_age_pro, adj_r_squared_lm_all_avg_sd_age, adj_r_squared_lm_distance, adj_r_squared_lm_within_5, adj_r_squared_lm_cluster_dis, adj_r_squared_lm_cluster_dis_within),
+  RMSE = c(rmse_dis_no_fea, rmse_all_age_pro, rmse_all_avg_sd_age, rmse_distance, rmse_within5, rmse_cluster_distances, rmse_cluster_dis_within))
+
+# Print the table
+print(model_comparison)
+```
+
+# Conclusion
+
+The two best performance models are the models that regress liveability on features, distance, and the number of commercial space within a specific radius (1km, 3km, 5km, 10km, and 20km). The different methods of age measurement do not significantly impact the Adjusted_R_square and RMSE. Therefore, these two measurement can be used to measure age of the neighborhood without affecting the prediction performance of the models.
+
