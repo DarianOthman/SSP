@@ -28,7 +28,7 @@
 
 **[Data Analysis](Data_Analysis.Rmd)**: This file takes as input the [variable](Data/normalized_variables.csv) file and produces an analysis of the variable's colinearity through a matrix and its VIF values. The normality is also studied through a Q-Q plot.
 
-**[X](Data_Analysis.Rmd)**: This collection of file builds upon the [data analysis](Data_Analysis.Rmd) to understand which variable has the biggesst influence on the livability score. The method used is called the log worth alogrithm.
+**[Logworth Analysis](Results/Logworth%20Analysis.pdf)**: This collection of file builds upon the [data analysis](Data_Analysis.Rmd) to understand which variable has the biggesst influence on the livability score. The method used is called the logworth alogrithm.
 
 **[Cluster Definition](Clusters.ipynb)**: This file takes as input the [variable](Data/normalized_variables.csv) file and creates clusters using different strategies (KMeans and DBscan). The [output](Data/df_normalized_clustering_output.csv) file is a collection of the cluster index to be used in the model.
 
