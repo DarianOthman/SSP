@@ -9,9 +9,6 @@ library(dplyr)
 library(corrplot)
 df <- read_csv("~/BISS/SSP/Code/Data/normalized_variables.csv")
 ```
-```{r}
-df
-```
 
 ```{r}
 df <- subset(df, select = -c(`prop_0-14`, `prop_15-24`,`prop_25-44`,`prop_45-64`,`prop_65+` ))
