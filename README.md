@@ -32,6 +32,6 @@
 
 **[Cluster Definition](Clusters.ipynb)**: This file takes as input the [variable](Data/normalized_variables.csv) file and creates clusters using different strategies (KMeans and DBscan). The [output](Data/df_normalized_clustering_output.csv) file is a collection of the cluster index to be used in the model.
 
-**[Models](Models.Rmd)**: This file first combines in Excel the [variable](Data/normalized_variables.csv) file and the [cluster](Data/df_normalized_clustering_output.csv) file. Multiple regression models are used to determine the importance of each variable on the livability score. Concurently, the coefficients of the regressions are used as inputs for the final dashboard. An analysis of the model performance is also made in this file.
+**[Models](Models.Rmd)**: This file first combines in Excel the [variable](Data/normalized_variables.csv) file and the [cluster](Data/df_normalized_clustering_output.csv) file to create the [final](Data/final_combined_data.csv) file. Multiple regression models are used to determine the importance of each variable on the livability score. Concurently, the coefficients of the regressions are used as inputs for the final dashboard. An analysis of the model performance is also made in this file.
 
 **[Results](Results/)**: Finally, all the outputs are presented in the folder [Results](Results/) for a better and clearer understanding.
